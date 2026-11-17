@@ -1,0 +1,24 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-background: #f6f7f8;
+  --color-foreground: #172823;
+  --color-muted: #f1f4f3;
+  --color-muted-foreground: #738078;
+  --color-border: #e3e8e5;
+  --color-taxi-yellow: #f7d747;
+  --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+:root { font-family: var(--font-sans); color: var(--color-foreground); background: var(--color-background); font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body { margin: 0; min-width: 320px; }
+button, select, a { -webkit-tap-highlight-color: transparent; }
+button, select { cursor: pointer; }
+button:disabled { cursor: default; }
+a:focus-visible { outline: 2px solid #0d9488; outline-offset: 4px; border-radius: 4px; }
+.eyebrow { margin-bottom: 8px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .16em; color: var(--color-muted-foreground); }
+.page-title { font-size: clamp(1.6rem, 2.5vw, 2rem); font-weight: 650; letter-spacing: -.04em; line-height: 1.2; }
+.page-description { margin-top: 10px; font-size: 13px; line-height: 1.6; color: var(--color-muted-foreground); }
+.maplibregl-popup-content { border-radius: 8px; padding: 10px 12px; color: var(--color-foreground); font: 12px/1.6 var(--font-sans); }
+.maplibregl-ctrl-group { border-radius: 8px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
