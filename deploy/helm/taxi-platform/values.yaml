@@ -1,0 +1,24 @@
+pipeline:
+  hdfs:
+    rawTaxi: /raw/taxi
+    rawWeather: /raw/weather
+    processed: /processed
+    models: /models
+  kafka:
+    taxiTopic: taxi-events
+    weatherTopic: weather-events
+  postgresql:
+    taxiTable: live_taxi
+    weatherTable: weather_forecasts
+
+hdfs:
+  image: apache/hadoop:3.4.1
+  nameNodeStorage: 1Gi
+  dataNodeStorage: 5Gi
+kafka:
+  image: apache/kafka:3.9.1
+  storage: 2Gi
+postgresql:
+  image: postgres:17
+  storage: 2Gi
+  database: taxi

@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-pipeline-config
+data:
+  HDFS_RAW_TAXI_PATH: {{ .Values.pipeline.hdfs.rawTaxi | quote }}
+  HDFS_RAW_WEATHER_PATH: {{ .Values.pipeline.hdfs.rawWeather | quote }}
+  HDFS_PROCESSED_PATH: {{ .Values.pipeline.hdfs.processed | quote }}
+  HDFS_MODELS_PATH: {{ .Values.pipeline.hdfs.models | quote }}
+  KAFKA_TAXI_TOPIC: {{ .Values.pipeline.kafka.taxiTopic | quote }}
+  KAFKA_WEATHER_TOPIC: {{ .Values.pipeline.kafka.weatherTopic | quote }}
+  POSTGRES_TAXI_TABLE: {{ .Values.pipeline.postgresql.taxiTable | quote }}
+  POSTGRES_WEATHER_TABLE: {{ .Values.pipeline.postgresql.weatherTable | quote }}
+  HDFS_URI: {{ include "taxi-platform.hdfsUri" . | quote }}
+  KAFKA_BOOTSTRAP_SERVERS: {{ include "taxi-platform.kafkaBootstrap" . | quote }}
+  POSTGRES_HOST: {{ printf "%s-postgresql" .Release.Name | quote }}
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: {{ .Values.postgresql.database | quote }}
+  POSTGRES_SECRET: {{ printf "%s-postgresql" .Release.Name | quote }}
+  SPARK_SERVICE_ACCOUNT: {{ printf "%s-spark" .Release.Name | quote }}
