@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-hdfs
+data:
+  core-site.xml: |
+    <configuration>
+      <property><name>fs.defaultFS</name><value>{{ include "taxi-platform.hdfsUri" . }}</value></property>
+    </configuration>
+  hdfs-site.xml: |
+    <configuration>
+      <property><name>dfs.replication</name><value>1</value></property>
+      <property><name>dfs.namenode.rpc-bind-host</name><value>0.0.0.0</value></property>
+      <property><name>dfs.namenode.name.dir</name><value>file:///data/namenode</value></property>
+      <property><name>dfs.datanode.data.dir</name><value>file:///data/datanode</value></property>
+      <property><name>dfs.namenode.datanode.registration.ip-hostname-check</name><value>false</value></property>
+      <property><name>dfs.permissions.enabled</name><value>false</value></property>
+    </configuration>
+{{- range $node, $settings := dict "namenode" (dict "port" 8020 "storage" .Values.hdfs.nameNodeStorage) "datanode" (dict "port" 9866 "storage" .Values.hdfs.dataNodeStorage) }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $.Release.Name }}-{{ $node }}
+spec:
+  clusterIP: None
+  {{- if eq $node "namenode" }}
+  publishNotReadyAddresses: true
+  {{- end }}
+  selector:
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/component: {{ $node }}
+  ports:
+    - name: hdfs
+      port: {{ $settings.port }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $.Release.Name }}-{{ $node }}
+spec:
+  serviceName: {{ $.Release.Name }}-{{ $node }}
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ $.Release.Name }}
+      app.kubernetes.io/component: {{ $node }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: {{ $.Release.Name }}
+        app.kubernetes.io/component: {{ $node }}
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: {{ $node }}
+          image: {{ $.Values.hdfs.image | quote }}
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              {{- if eq $node "namenode" }}
+              if [ ! -f /data/namenode/current/VERSION ]; then
+                /opt/hadoop/bin/hdfs namenode -format -nonInteractive
+              fi
+              {{- end }}
+              exec /opt/hadoop/bin/hdfs {{ $node }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ $settings.port }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: hadoop-config
+              mountPath: /opt/hadoop/etc/hadoop/core-site.xml
+              subPath: core-site.xml
+            - name: hadoop-config
+              mountPath: /opt/hadoop/etc/hadoop/hdfs-site.xml
+              subPath: hdfs-site.xml
+      volumes:
+        - name: hadoop-config
+          configMap:
+            name: {{ $.Release.Name }}-hdfs
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: {{ $settings.storage | quote }}
+{{- end }}

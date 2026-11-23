@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-bootstrap
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  activeDeadlineSeconds: 240
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      automountServiceAccountToken: false
+      initContainers:
+        - name: hdfs
+          image: {{ .Values.hdfs.image | quote }}
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              until /opt/hadoop/bin/hdfs dfs -fs "$HDFS_URI" -mkdir -p \
+                /raw "$HDFS_RAW_TAXI_PATH" "$HDFS_RAW_WEATHER_PATH" \
+                "$HDFS_PROCESSED_PATH" "$HDFS_MODELS_PATH"; do
+                sleep 5
+              done
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-pipeline-config
+      containers:
+        - name: kafka
+          image: {{ .Values.kafka.image | quote }}
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              for topic in "$KAFKA_TAXI_TOPIC" "$KAFKA_WEATHER_TOPIC"; do
+                until /opt/kafka/bin/kafka-topics.sh \
+                  --bootstrap-server "$KAFKA_BOOTSTRAP_SERVERS" --create --if-not-exists \
+                  --topic "$topic" --partitions 1 --replication-factor 1; do
+                  sleep 5
+                done
+              done
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-pipeline-config
