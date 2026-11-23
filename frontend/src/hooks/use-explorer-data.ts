@@ -32,12 +32,15 @@ export function useExplorerData(selection: ExplorerSelection, asOf: string, metr
   const dailySummary = useMemo(() => demand.data
     ? summarizeDemand(demand.data.zoneHours, { startDate: selection.date, endDate: selection.date }, demand.data.asOf)
     : undefined, [demand.data, selection.date])
-  const mapMetric = useMemo(() => dailySummary ? getDailyMapMetric(dailySummary, metric) : undefined, [dailySummary, metric])
+  const observedMetric = useMemo(() => dailySummary ? getDailyMapMetric(dailySummary, 'observed') : undefined, [dailySummary])
+  const observedAvailable = !!observedMetric?.values.size
+  const effectiveMetric = metric === 'observed' && !observedAvailable ? 'predicted' : metric
+  const mapMetric = useMemo(() => !dailySummary ? undefined : effectiveMetric === 'observed' ? observedMetric : getDailyMapMetric(dailySummary, 'predicted'), [dailySummary, effectiveMetric, observedMetric])
   const dailyWeather = useMemo(() => weather.data ? summarizeDailyWeather(weather.data.hours, selection.date) : undefined, [weather.data, selection.date])
   const selectedDaily = selection.zoneId === null ? dailySummary?.totals : dailySummary?.zones.find((zone) => zone.zoneId === selection.zoneId)
   const expectedZoneHours = getDayIntervals(selection.date).length * (selection.zoneId === null ? zones.data?.features.length ?? dailySummary?.zoneCount ?? 0 : 1)
   return {
-    zones, demand, weather, hours, mapMetric, selectedDaily, dailyWeather, expectedZoneHours,
+    zones, demand, weather, hours, mapMetric, observedAvailable, effectiveMetric, selectedDaily, dailyWeather, expectedZoneHours,
     selectedDemand: hours.find((hour) => hour.interval.start === selection.intervalStart),
     selectedWeather: weather.data?.hours.find((hour) => hour.interval.start === selection.intervalStart),
   }

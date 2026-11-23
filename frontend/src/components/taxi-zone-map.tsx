@@ -15,6 +15,7 @@ export interface ZoneMapMetric {
   maximum: number
   label: string
   period: string
+  scaleDescription?: string
 }
 
 interface TaxiZoneMapProps {
@@ -154,7 +155,7 @@ export function TaxiZoneMap({ zones, selectedZoneId, onSelectZone, metric }: Tax
         {metric.values.size > 0 ? <>
         <div className="mt-2 flex h-2 overflow-hidden rounded-sm">{DEMAND_COLORS.map((color) => <span key={color} className="flex-1" style={{ backgroundColor: color }} />)}</div>
         <div className="mt-1 flex justify-between text-[10px] tabular-nums text-muted-foreground"><span>0</span><span>{metric.maximum.toLocaleString('en-US')}+</span></div>
-        <p className="mt-1 text-[9px] text-muted-foreground">Same scale across dates and metrics</p>
+        <p className="mt-1 text-[9px] text-muted-foreground">{metric.scaleDescription ?? 'Same scale across dates and metrics'}</p>
         </> : <p className="mt-2 text-[10px] text-muted-foreground">No observations available</p>}
       </div>}
       {mapError && <div role="alert" className="absolute inset-x-4 bottom-18 rounded-lg border border-red-200 bg-white p-4 text-sm text-red-800">The interactive map could not be displayed. {mapError} You can still select a zone using the selector above.</div>}

@@ -22,8 +22,9 @@ Demand Explorer, geographic coverage, and deterministic data services are implem
 - Daily observed/predicted map toggle with a shared scale across dates and metrics.
 - Daily statistics/weather by default; optional hourly information with completed-only comparisons.
 
-Demand Explorer is functional. Overview remains the geographic preview; its
-analytics UI is the next increment. Docker and Kubernetes also remain pending.
+Demand Explorer and Overview are functional. Overview includes 7/30-day and custom
+ranges, demand trends, zone-hour MAE/WAPE, daily error, and linked rankings/map.
+Docker and Kubernetes remain pending.
 The original source datasets are not modified or bundled.
 
 ## Develop
@@ -63,7 +64,8 @@ The production output is `dist/`. A future production static server must return
 - `AppLayout` renders shared navigation, a skip-to-content link, and the route outlet.
 - `DemandExplorer` loads the fixed demo clock, then renders synchronized date,
   zone, and interval selections with service-backed map/chart/weather data.
-  `Overview` retains the geographic preview and identifies its analytics as pending.
+  `Overview` connects one applied range to aggregate cards, demand/error charts,
+  completed-observation rankings, and the shared geographic map.
 - `Button` uses Radix Slot for link/button composition and shared variant styling.
   `Card` supplies consistent panel styling. `cn` combines conditional classes and
   resolves conflicting Tailwind utilities.
@@ -75,8 +77,9 @@ The production output is `dist/`. A future production static server must return
 2. `getZones` retrieves the local GeoJSON, checks HTTP status, then calls `parseZones`.
 3. `parseZones` rejects malformed collections, duplicate/inconsistent IDs, invalid
    properties, and invalid coordinate arrays before data reaches the map.
-4. Overview's `ZoneBrowser` owns its preview selection. Demand Explorer owns its
-   date/zone/interval reducer; both reuse `ZoneSelector` and `TaxiZoneMap`.
+4. Demand Explorer owns date/zone/optional-hour selection. Overview owns an applied
+   date range and a separate geographic highlight. Both reuse `ZoneSelector` and
+   `TaxiZoneMap`; Overview highlights do not filter its Manhattan-wide statistics.
 5. `TaxiZoneMap` creates/destroys MapLibre, its popup, event handlers, and resize
    observer with React's lifecycle. Selection changes update the outline and camera;
    the parent still owns the selected ID. Reduced-motion preferences skip animation.
@@ -100,8 +103,9 @@ explanation of restoring island IDs 104/105 from the original TLC attributes.
 `demandService`, and `weatherService`. Their Promise-based contracts accept
 optional abort signals and can be replaced with HTTP adapters at that composition
 point. `useExplorerData` connects these services to Demand Explorer without
-importing mock generators into UI components. Overview's service integration
-remains pending.
+importing mock generators into UI components. `useOverviewData` calls the existing
+range-summary service for all analytical views. Daily summary rows also include
+zone-hour evaluation metrics for the daily MAE chart.
 
 See [Data services and calculations](docs/data-services.md) for request/response
 contracts, example usage, observation states, units, eligibility rules, timezone
@@ -110,7 +114,8 @@ will communicate with an HTTP API, not directly with Kafka or Spark.
 
 See [Demand Explorer](docs/demand-explorer.md) for the selection/data flow, exact
 chart hit-region mechanism, daily metric scale, selection reset behavior, and responsibilities of
-each new or modified function in the Explorer increment.
+each new or modified function in the Explorer increment. See [Overview](docs/overview.md)
+for range behavior, metric eligibility, map/ranking semantics, and function responsibilities.
 
 ## Verification and known limitations
 
@@ -127,7 +132,8 @@ production build and lint also check the new data-layer source and tests.
 
 Explorer component tests verify synchronized filters and chart selection with real
 data services, including pending/error/retry/empty states and independent weather
-failure. Actual canvas coloring, chart click geometry, and responsive layouts are
+failure. Overview tests cover presets, validated custom ranges, incomplete/future
+coverage, metric display, map highlights, retry, and empty data. Actual canvas coloring, chart click geometry, and responsive layouts are
 verified in the browser. Test-only dependencies are Testing Library and jsdom.
 
 MapLibre is a substantial dependency; Vite may report a large-chunk warning.

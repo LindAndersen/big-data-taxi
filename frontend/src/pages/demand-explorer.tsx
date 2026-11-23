@@ -51,7 +51,7 @@ function ExplorerContent({ clock }: { clock: ClockSnapshot }) {
           </div>
           <div role="group" aria-label="Map demand metric" className="flex flex-wrap items-center gap-2 border-t border-border px-5 py-2">
             <span className="mr-1 text-xs text-muted-foreground">Map metric</span>
-            {(['observed', 'predicted'] as const).map((metric) => <Button key={metric} variant={mapMetric === metric ? 'default' : 'ghost'} size="sm" aria-pressed={mapMetric === metric} onClick={() => setMapMetric(metric)}>{metric === 'observed' ? 'Observed' : 'Predicted'}</Button>)}
+            {(['observed', 'predicted'] as const).map((metric) => <Button key={metric} variant={data.effectiveMetric === metric ? 'default' : 'ghost'} size="sm" aria-pressed={data.effectiveMetric === metric} disabled={metric === 'observed' && !data.observedAvailable} title={metric === 'observed' && !data.observedAvailable ? 'No observed demand is available for this date' : undefined} onClick={() => setMapMetric(metric)}>{metric === 'observed' ? 'Observed' : 'Predicted'}</Button>)}
           </div>
           {data.zones.isPending ? <DataNotice pending message="Loading Manhattan taxi zones…" />
             : data.zones.isError ? <DataNotice message="Taxi zones could not be loaded." onRetry={() => void data.zones.refetch()} />

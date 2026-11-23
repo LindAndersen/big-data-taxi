@@ -106,6 +106,8 @@ describe('range summaries and rankings', () => {
     expect(result.evaluation.wape).toBeCloseTo(45 / 165 * 100)
     expect(result.daily.map((day) => day.date)).toEqual(['2025-01-14', '2025-01-15', '2025-01-16'])
     expect(result.daily[2].observedPickups).toBeNull()
+    expect(result.daily.map((day) => day.evaluation.mae)).toEqual([20, 5, null])
+    expect(result.daily.reduce((sum, day) => sum + day.evaluation.totalAbsoluteError, 0)).toBe(result.evaluation.totalAbsoluteError)
   })
 
   it('uses completed actuals for busiest day and zone rankings, excluding partial counts', () => {

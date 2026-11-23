@@ -52,6 +52,8 @@ export interface DemandTotals {
 
 export interface DailyDemandTotals extends DemandTotals {
   date: string
+  /** Individual completed zone-hour evaluation for this calendar date. */
+  evaluation: ModelEvaluation
 }
 
 export interface ZoneDemandTotals extends DemandTotals {

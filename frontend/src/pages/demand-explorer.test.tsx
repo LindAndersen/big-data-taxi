@@ -106,14 +106,15 @@ describe('daily map and optional hourly details', () => {
     expect(screen.getByLabelText('Map daily maximum').textContent).toBe(maximum)
   })
 
-  it('shows an unavailable observed map for future dates while keeping zone selection and forecasts usable', async () => {
+  it('disables unavailable Observed and defaults to Predicted, then restores observed availability', async () => {
     const user = userEvent.setup()
     showExplorer()
     await screen.findByRole('region', { name: 'Daily demand details' })
     await user.click(screen.getByRole('button', { name: 'Next day' }))
     await waitFor(() => expect(panel().textContent).toContain('Thu, Jan 16, 2025'))
-    expect(screen.getByLabelText('Map Central Park demand').textContent).toBe('Unavailable')
-    expect(screen.getByLabelText('Map observation period').textContent).toContain('No observations')
+    expect((screen.getByRole('button', { name: 'Observed' }) as HTMLButtonElement).disabled).toBe(true)
+    expect(screen.getByRole('button', { name: 'Predicted' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByLabelText('Map observation period').textContent).toContain('Full day')
     await user.click(screen.getByRole('button', { name: 'Select Central Park on map' }))
     await user.click(screen.getByRole('button', { name: 'Select 14:00–15:00 (UTC-05:00)' }))
     expect(panel().textContent).toContain('Central Park')
@@ -122,6 +123,20 @@ describe('daily map and optional hourly details', () => {
     const park = await demandService.getHourlyDemand({ date: '2025-01-16', zoneId: 43 })
     expect(screen.getByLabelText('Map Central Park demand').textContent).toBe(String(park.hours.reduce((sum, row) => sum + row.predictedPickups, 0)))
     expect(within(panel()).getByText(park.hours[14].predictedPickups.toLocaleString('en-US'))).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: 'Today' }))
+    await waitFor(() => expect((screen.getByRole('button', { name: 'Observed' }) as HTMLButtonElement).disabled).toBe(false))
+    await user.click(screen.getByRole('button', { name: 'Observed' }))
+    expect(screen.getByLabelText('Map metric').textContent).toBe('Observed daily pickups')
+  })
+
+  it('keeps Observed available when observations exist but all counts are zero', async () => {
+    const response = await demandService.getHourlyDemand({ date: '2025-01-15', zoneId: null })
+    const zero = <T extends typeof response.hours[number]>(row: T): T => ({ ...row, observation: row.observation.status === 'unavailable' ? row.observation : { ...row.observation, pickups: 0 } })
+    vi.spyOn(demandService, 'getHourlyDemand').mockResolvedValue({ ...response, zoneHours: response.zoneHours.map(zero), hours: response.hours.map(zero) })
+    showExplorer()
+    await screen.findByRole('region', { name: 'Daily demand details' })
+    expect((screen.getByRole('button', { name: 'Observed' }) as HTMLButtonElement).disabled).toBe(false)
+    expect(screen.getByLabelText('Map Central Park demand').textContent).toBe('0')
   })
 
   it('supports clear selection, first/last bands, and repeated keyboard navigation without toggling off', async () => {

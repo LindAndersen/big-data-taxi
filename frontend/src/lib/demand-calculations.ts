@@ -120,6 +120,7 @@ export function summarizeDemand(records: Iterable<HourlyDemand>, range: DateRang
   const instant = Temporal.Instant.from(asOf)
   const asOfMs = instant.epochMilliseconds
   const daily = new Map(dates.map((date) => [date, { date, ...emptyTotals() }]))
+  const dailyEvaluation = new Map(dates.map((date) => [date, emptyEvaluation()]))
   const zones = new Map<number, ZoneDemandTotals>()
   const totals = emptyTotals()
   const evaluation = emptyEvaluation()
@@ -136,8 +137,9 @@ export function summarizeDemand(records: Iterable<HourlyDemand>, range: DateRang
     addTotals(day, record, asOfMs)
     addTotals(zone, record, asOfMs)
     addEvaluation(evaluation, record, asOfMs)
+    addEvaluation(dailyEvaluation.get(record.interval.date)!, record, asOfMs)
   }
-  const days = [...daily.values()]
+  const days = [...daily.values()].map((day) => ({ ...day, evaluation: finishEvaluation(dailyEvaluation.get(day.date)!) }))
   let busiestDay: DemandSummary['busiestDay'] = null
   for (const day of days) {
     if (day.completedObservedPickups !== null

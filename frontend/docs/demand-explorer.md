@@ -2,7 +2,7 @@
 
 The existing layout, map, Recharts graph, date controls, and hourly panel are
 preserved. This interaction update adds a daily view and separates map metrics
-from optional hourly detail. Overview remains unchanged.
+from optional hourly detail. See `overview.md` for the analytical dashboard.
 
 ## State and data flow
 
@@ -33,9 +33,11 @@ persists when navigating dates and does not alter the graph or information panel
 | Observed, current date | Cumulative observations, including the current partial hour, from midnight through the fixed snapshot |
 | Observed, future date | No observed values; neutral zones and an explicit unavailable label |
 
-Future dates remain on Observed unless the user chooses Predicted. The map still
-supports zone selection when observations are unavailable. Missing values are not
-converted to zero. Hover details include the daily value and its observation period.
+Observed is disabled and greyed out when there are no observed values (including
+future dates). The effective metric automatically becomes Predicted without
+changing the stored user preference. Returning to a date with observations enables
+Observed again. Observed zeros remain valid available data. No extra state, effect,
+or service request is needed. Hover details include the daily value and period.
 
 Both metrics and all dates share a fixed **pickups-per-zone-per-day** color scale.
 The five existing colors represent 0–2,000, 2,000–4,000, 4,000–6,000,
@@ -44,8 +46,8 @@ in the last band, while hover details always retain their exact counts. This vis
 scale is a presentation threshold, not mock demand data or a backend limit.
 
 `ZoneMapMetric` retains its values/maximum/label and adds a period label. The
-shared map no longer appends an hourly unit. Overview's map without a metric
-retains its existing behavior.
+shared map no longer appends an hourly unit. Overview supplies a range metric
+and its own relative-scale description; Explorer retains the fixed daily scale.
 
 ## Optional hourly selection
 
@@ -114,7 +116,7 @@ aggregation, missing weather, and 23/25-hour days.
 
 Component tests use real data services and the real chart, replacing only WebGL
 and container measurement. They verify initial daily/Observed mode, selected-hour
-map independence, metric toggle independence, future neutral maps, both deselection
+map independence, metric toggle independence, automatic future forecast selection and valid observed zeros, both deselection
 methods, keyboard navigation, date resets, historical daily comparisons, partial
 hour safeguards, DST dates, and the existing loading/error/retry/empty states.
 Browser checks verify actual map rendering and the interactive daily/hourly flow.

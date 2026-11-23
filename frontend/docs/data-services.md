@@ -1,7 +1,7 @@
 # Demand and weather services
 
 The data and calculations are connected to Demand Explorer through query hooks;
-Overview integration remains pending. Application consumers should import the
+Overview uses the range-summary service. Application consumers should import the
 adapters from `src/services/index.ts`; they should not import mock generators.
 
 ## Interfaces and requests
@@ -14,7 +14,7 @@ source failures reject the request; they do not silently turn into empty dataset
 | Zones | `getZones(signal?)` | Locally stored Manhattan `ZoneCollection` |
 | Clock | `getCurrentTime(signal?)` | `{ asOf, timeZone }` |
 | Demand | `getHourlyDemand({ date, zoneId }, signal?)` | Individual `zoneHours` and derived chart `hours`, plus request and clock metadata |
-| Demand | `getSummary({ startDate, endDate }, signal?)` | Range totals, daily totals, zone totals/ranking, busiest day, evaluation, and clock metadata |
+| Demand | `getSummary({ startDate, endDate }, signal?)` | Range totals, daily totals and evaluations, zone totals/ranking, busiest day, evaluation, and clock metadata |
 | Demand | `getEvaluation({ startDate, endDate }, signal?)` | Evaluation for individual zone-hours in that range and clock metadata |
 | Weather | `getHourlyWeather(date, signal?)` | One shared Manhattan hourly weather series |
 
@@ -156,6 +156,18 @@ taxi parquet. Those source datasets remain untouched and outside the browser bun
 | `getSummary` | Generate a range as an iterable and compute its summary without keeping all raw range rows. |
 | `getEvaluation` | Calculate the same range's evaluation independently using the shared generation and eligibility logic. |
 | `getHourlyWeather` | Expose the independent weather generator through the asynchronous, cancellable service contract. |
+
+## Daily evaluation in range summaries
+
+Each `DailyDemandTotals` now includes `evaluation: ModelEvaluation` for the Overview
+performance chart. `summarizeDemand` accumulates daily absolute errors and paired
+counts in the same pass and with the same eligibility rule as overall evaluation.
+Daily no-sample metrics are null; zero-actual WAPE is null. Summed daily absolute
+errors and sample counts equal the overall evaluation totals. MAE/WAPE percentages
+must not be averaged across dates to derive the range metrics.
+
+This is an additive response field on the existing summary service, not a new
+endpoint. Future HTTP adapters should supply it alongside daily totals.
 
 ## Future HTTP integration
 
