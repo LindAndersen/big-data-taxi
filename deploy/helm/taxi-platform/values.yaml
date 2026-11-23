@@ -1,5 +1,7 @@
 pipeline:
   hdfs:
+    historicalTaxi: /historical/taxi
+    historicalWeather: /historical/weather
     rawTaxi: /raw/taxi
     rawWeather: /raw/weather
     processed: /processed

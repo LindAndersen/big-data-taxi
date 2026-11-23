@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-pipeline-config
 data:
+  HDFS_HISTORICAL_TAXI_PATH: {{ .Values.pipeline.hdfs.historicalTaxi | quote }}
+  HDFS_HISTORICAL_WEATHER_PATH: {{ .Values.pipeline.hdfs.historicalWeather | quote }}
   HDFS_RAW_TAXI_PATH: {{ .Values.pipeline.hdfs.rawTaxi | quote }}
   HDFS_RAW_WEATHER_PATH: {{ .Values.pipeline.hdfs.rawWeather | quote }}
   HDFS_PROCESSED_PATH: {{ .Values.pipeline.hdfs.processed | quote }}

@@ -19,7 +19,8 @@ spec:
           args:
             - |
               until /opt/hadoop/bin/hdfs dfs -fs "$HDFS_URI" -mkdir -p \
-                /raw "$HDFS_RAW_TAXI_PATH" "$HDFS_RAW_WEATHER_PATH" \
+                "$HDFS_HISTORICAL_TAXI_PATH" "$HDFS_HISTORICAL_WEATHER_PATH" \
+                "$HDFS_RAW_TAXI_PATH" "$HDFS_RAW_WEATHER_PATH" \
                 "$HDFS_PROCESSED_PATH" "$HDFS_MODELS_PATH"; do
                 sleep 5
               done
