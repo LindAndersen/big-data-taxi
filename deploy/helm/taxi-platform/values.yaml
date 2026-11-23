@@ -11,6 +11,11 @@ pipeline:
     taxiTable: live_taxi
     weatherTable: weather_forecasts
 
+spark:
+  rbac:
+    # Disable when deploying only the backing services in a restricted namespace.
+    create: true
+
 hdfs:
   image: apache/hadoop:3.4.1
   nameNodeStorage: 1Gi

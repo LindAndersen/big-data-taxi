@@ -17,4 +17,6 @@ data:
   POSTGRES_PORT: "5432"
   POSTGRES_DB: {{ .Values.postgresql.database | quote }}
   POSTGRES_SECRET: {{ printf "%s-postgresql" .Release.Name | quote }}
+  {{- if .Values.spark.rbac.create }}
   SPARK_SERVICE_ACCOUNT: {{ printf "%s-spark" .Release.Name | quote }}
+  {{- end }}
